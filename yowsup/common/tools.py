@@ -3,12 +3,14 @@ from dateutil import tz
 import os
 from .constants import YowConstants
 import codecs, sys
+import json
 import logging
 import tempfile
 import base64
 import hashlib
 import os.path, mimetypes
 from pkg_resources import resource_string
+from subprocess import CalledProcessError, check_output
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +127,13 @@ class ModuleTools:
         except ImportError:
             return False
     @staticmethod
+    def INSTALLED_EXIFTOOL():
+        try:
+            check_output(["exiftool", "-ver"])
+            return True
+        except OSError:
+            return False
+    @staticmethod
     def INSTALLED_PIL():
         try:
             import PIL
@@ -210,8 +219,21 @@ class VideoTools:
 			from ffvideo import VideoStream
 			s = VideoStream(videoFile)
 			return s.width, s.height, s.bitrate, s.duration #, s.codec_name
+                elif ModuleTools.INSTALLED_EXIFTOOL():
+                    try:
+                        result = json.loads(check_output(["exiftool", "-j", "-n", videoFile]))[0]
+                    except CalledProcessError:
+                        logger.warn("exiftool returned non-zero status for video %s", videoFile)
+                    except (IndexError, ValueError):
+                        logger.warn("Failed reading exiftool result for video %s", videoFile)
+                    else:
+                        try:
+                            return result["ImageWidth"], result["ImageHeight"], \
+                                    result["AvgBitrate"], result["Duration"]
+                        except KeyError:
+                            logger.warn("Failed reading video properties from exiftool JSON")
 		else:
-			logger.warn("Python ffvideo library not installed")
+			logger.warn("None of [Python ffvideo library, exiftool] installed")
 
 	@staticmethod
 	def generatePreviewFromVideo(videoFile):
