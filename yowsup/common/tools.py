@@ -193,8 +193,8 @@ class MimeTools:
     mimetypes.init() # Load default mime.types
     try:
         mimetypes.init([MIME_FILE]) # Append whatsapp mime.types
-    except ValueError:
-        pass # In order to ignore "path too long for Windows" but just default mimetypes will be used.
+    except exception as e:
+        logger.warning("Mime types supported can't be read. System mimes will be used. Cause: " + e.message)
 
     @staticmethod
     def getMIME(filepath):
