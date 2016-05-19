@@ -212,38 +212,38 @@ class MimeTools:
 
 
 class VideoTools:
-	
-	@staticmethod
-	def getVideoProperties(videoFile):
-		if ModuleTools.INSTALLED_FFVIDEO():
-			from ffvideo import VideoStream
-			s = VideoStream(videoFile)
-			return s.width, s.height, s.bitrate, s.duration #, s.codec_name
-                elif ModuleTools.INSTALLED_EXIFTOOL():
-                    try:
-                        result = json.loads(check_output(["exiftool", "-j", "-n", videoFile]))[0]
-                    except CalledProcessError:
-                        logger.warn("exiftool returned non-zero status for video %s", videoFile)
-                    except (IndexError, ValueError):
-                        logger.warn("Failed reading exiftool result for video %s", videoFile)
-                    else:
-                        try:
-                            return result["ImageWidth"], result["ImageHeight"], \
-                                    result["AvgBitrate"], result["Duration"]
-                        except KeyError:
-                            logger.warn("Failed reading video properties from exiftool JSON")
-		else:
-			logger.warn("None of [Python ffvideo library, exiftool] installed")
+    
+    @staticmethod
+    def getVideoProperties(videoFile):
+        if ModuleTools.INSTALLED_FFVIDEO():
+            from ffvideo import VideoStream
+            s = VideoStream(videoFile)
+            return s.width, s.height, s.bitrate, s.duration #, s.codec_name
+        elif ModuleTools.INSTALLED_EXIFTOOL():
+            try:
+                result = json.loads(check_output(["exiftool", "-j", "-n", videoFile]))[0]
+            except CalledProcessError:
+                logger.warn("exiftool returned non-zero status for video %s", videoFile)
+            except (IndexError, ValueError):
+                logger.warn("Failed reading exiftool result for video %s", videoFile)
+            else:
+                try:
+                    return result["ImageWidth"], result["ImageHeight"], \
+                            result["AvgBitrate"], result["Duration"]
+                except KeyError:
+                    logger.warn("Failed reading video properties from exiftool JSON")
+        else:
+            logger.warn("None of [Python ffvideo library, exiftool] installed")
 
-	@staticmethod
-	def generatePreviewFromVideo(videoFile):
-		if ModuleTools.INSTALLED_FFVIDEO():
-			from ffvideo import VideoStream
-			fd, path = tempfile.mkstemp('.jpg')
-			stream = VideoStream(videoFile)
-			stream.get_frame_at_sec(0).image().save(path)
-			preview = ImageTools.generatePreviewFromImage(path)
-			os.remove(path)
-			return preview		
-		else:
-			logger.warn("Python ffvideo library not installed")
+    @staticmethod
+    def generatePreviewFromVideo(videoFile):
+        if ModuleTools.INSTALLED_FFVIDEO():
+            from ffvideo import VideoStream
+            fd, path = tempfile.mkstemp('.jpg')
+            stream = VideoStream(videoFile)
+            stream.get_frame_at_sec(0).image().save(path)
+            preview = ImageTools.generatePreviewFromImage(path)
+            os.remove(path)
+            return preview      
+        else:
+            logger.warn("Python ffvideo library not installed")
