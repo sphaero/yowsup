@@ -298,7 +298,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         sessionCipher = self.getSessionCipher(pkMessageProtocolEntity.getAuthor(False))
         plaintext = sessionCipher.decryptPkmsg(preKeyWhisperMessage)
         if enc.getVersion() == 2:
-            padding = ord(plaintext[-1]) & 0xFF
+            if isinstance(plaintext[-1], str):
+                padding = ord(plaintext[-1]) & 0xFF
+            else:
+                padding = plaintext[-1] & 0xFF
             self.parseAndHandleMessageProto(pkMessageProtocolEntity, plaintext[:-padding])
         else:
             self.handleConversationMessage(node, plaintext)
@@ -312,7 +315,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         plaintext = sessionCipher.decryptMsg(whisperMessage)
 
         if enc.getVersion() == 2:
-            padding = ord(plaintext[-1]) & 0xFF
+            if isinstance(plaintext[-1], str):
+                padding = ord(plaintext[-1]) & 0xFF
+            else:
+                padding = plaintext[-1] & 0xFF
             self.parseAndHandleMessageProto(encMessageProtocolEntity, plaintext[:-padding])
         else:
             self.handleConversationMessage(encMessageProtocolEntity.toProtocolTreeNode(), plaintext)
@@ -325,7 +331,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         groupCipher = GroupCipher(self.store, senderKeyName)
         try:
             plaintext = groupCipher.decrypt(enc.getData())
-            padding = ord(plaintext[-1]) & 0xFF
+            if isinstance(plaintext[-1], str):
+                padding = ord(plaintext[-1]) & 0xFF
+            else:
+                padding = plaintext[-1] & 0xFF
             self.parseAndHandleMessageProto(encMessageProtocolEntity, plaintext[:-padding])
         except NoSessionException as e:
             logger.error(e)
@@ -343,7 +352,7 @@ class YowAxolotlLayer(YowProtocolLayer):
             #    f.write(serializedData)
             print(serializedData)
             print([s for s in serializedData])
-            print([ord(s) for s in serializedData])
+            #print([ord(s) for s in serializedData])
             raise
         if not m or not serializedData:
             raise ValueError("Empty message")
